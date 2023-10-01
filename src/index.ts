@@ -1,17 +1,24 @@
 import * as express from "express"
-import * as bodyParser from "body-parser"
 import { Request, Response } from "express"
 import { AppDataSource } from "./data-source"
 import { Routes } from "./routes"
 import { User } from "./entity/User"
+import { Usuario } from "./entity/Usuario"
+import { SimpleConsoleLogger } from "typeorm"
+
 
 AppDataSource.initialize().then(async () => {
-
+    console.log("Database connected")
     // create express app
     const app = express()
-    app.use(bodyParser.json())
+    app.use(express.json())
+
+    console.log("app use express json")
 
     // register express routes from defined application routes
+
+    console.log("before routes foreach")
+    
     Routes.forEach(route => {
         (app as any)[route.method](route.route, (req: Request, res: Response, next: Function) => {
             const result = (new (route.controller as any))[route.action](req, res, next)
@@ -24,29 +31,33 @@ AppDataSource.initialize().then(async () => {
         })
     })
 
+    console.log("after routes foreach")
+
     // setup express app here
     // ...
 
     // start express server
-    app.listen(3000)
+    app.listen(3000, () => console.log("server on port 3000"))
 
-    // insert new users for test
-    await AppDataSource.manager.save(
-        AppDataSource.manager.create(User, {
-            firstName: "Timber",
-            lastName: "Saw",
-            age: 27
-        })
-    )
+    console.log("after app listen")
+    
 
-    await AppDataSource.manager.save(
-        AppDataSource.manager.create(User, {
-            firstName: "Phantom",
-            lastName: "Assassin",
-            age: 24
-        })
-    )
+    const user = new Usuario();
+    user.nome = "Eduarda Pereira Oliveira";
+    user.rg = '54.820.520-4';
+    user.cpf = '328.620.228-29';
+    user.n_telefone = '(11) 93283-3603';
+    user.email = 'EduardaPereiraOliveira@gmail.com';
+    user.usuario = 'EduardaPOliveira';
+    user.nascimento = new Date('1998-03-30');
+    user.senha = 'Biezae4ear';
 
-    console.log("Express server has started on port 3000. Open http://localhost:3000/users to see results")
+    console.log("after user create")
+
+
+    await AppDataSource.manager.save(user);
+
+    console.log("after user save")
+
 
 }).catch(error => console.log(error))
